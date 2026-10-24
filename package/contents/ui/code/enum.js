@@ -25,3 +25,8 @@ const WaveMode = {
   Square: 1,
   Triangle: 2
 };
+
+const ImagePosition = {
+  Left: 0,
+  Right: 1,
+};

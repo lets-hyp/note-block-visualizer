@@ -40,6 +40,12 @@ Item {
     property bool circleModeFill: Plasmoid.configuration.circleModeFill
     property bool pinnedDownSides: Plasmoid.configuration.pinnedDownSides
     property bool waveform: Plasmoid.configuration.waveform
+    property bool showImage: Plasmoid.configuration.showImage
+    property int imagePosition: Plasmoid.configuration.imagePosition
+    property string imageSource: Plasmoid.configuration.imageSource
+    property int imageSpacing: Plasmoid.configuration.imageSpacing
+    // the image only makes sense for the normal bottom/top bar layouts
+    readonly property bool imageAllowed: showImage && !circleMode && [Enum.Orientation.Top, Enum.Orientation.Bottom].includes(orientation)
     clip: !Plasmoid.configuration.debugMode
 
     property var logger: Logger.create(Plasmoid.configuration.debugMode ? LoggingCategory.Debug : LoggingCategory.Info)
@@ -96,12 +102,37 @@ Item {
     }
     property bool drawInactiveBlocks: Plasmoid.configuration.drawInactiveBlocks
 
+    // Report the real visualizer size back to main.qml so the bar count and
+    // CAVA's ascii range follow the visualizer area, not the whole widget.
+    Binding {
+        target: main
+        property: "visualizerWidth"
+        value: visualizer.width
+        when: visualizer.width > 0
+        restoreMode: Binding.RestoreNone
+    }
+    Binding {
+        target: main
+        property: "visualizerHeight"
+        value: visualizer.height
+        when: visualizer.height > 0
+        restoreMode: Binding.RestoreNone
+    }
+
     RowLayout {
         id: content
         height: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.width : parent.height
         width: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.height : parent.width
         anchors.centerIn: parent
-        spacing: 0
+        spacing: root.imageAllowed ? root.imageSpacing : 0
+        CoverImage {
+            id: coverLeft
+            source: root.imageSource
+            visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Left
+            Layout.preferredWidth: content.height
+            Layout.preferredHeight: content.height
+            Layout.alignment: Qt.AlignVCenter
+        }
         Visualizer {
             id: visualizer
             visualizerStyle: root.visualizerStyle
@@ -196,6 +227,14 @@ Item {
                 }
                 return t;
             }
+        }
+        CoverImage {
+            id: coverRight
+            source: root.imageSource
+            visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Right
+            Layout.preferredWidth: content.height
+            Layout.preferredHeight: content.height
+            Layout.alignment: Qt.AlignVCenter
         }
         Kirigami.Icon {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter

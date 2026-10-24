@@ -8,6 +8,11 @@ ConfigModel {
         source: "configVisualizer.qml"
     }
     ConfigCategory {
+        name: i18n("Cover image")
+        icon: "image-x-generic-symbolic"
+        source: "configCover.qml"
+    }
+    ConfigCategory {
         name: "CAVA"
         icon: "view-process-system-symbolic"
         source: "configCava.qml"

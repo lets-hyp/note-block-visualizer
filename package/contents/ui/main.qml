@@ -20,6 +20,13 @@ PlasmoidItem {
     property bool disableLeftClick: Plasmoid.configuration.disableLeftClick
     property real minimumDimension: Math.min(main.width, main.height)
 
+    // Size of the visualizer area itself (in its own, unrotated coordinates).
+    // CompactRepresentation overrides these with the real visualizer size,
+    // so extra items (cover image, text) next to the bars don't break the bar count.
+    property bool sideways: [Enum.Orientation.Left, Enum.Orientation.Right].includes(Plasmoid.configuration.orientation)
+    property real visualizerWidth: sideways ? main.height : main.width
+    property real visualizerHeight: sideways ? main.width : main.height
+
     property int barGap: {
         if (Plasmoid.configuration.visualizerStyle === Enum.VisualizerStyles.Wave) {
             return Math.max(1, Plasmoid.configuration.barGap);
@@ -33,7 +40,7 @@ PlasmoidItem {
         if (Plasmoid.configuration.circleMode) {
             width = minimumDimension;
         } else {
-            width = [Enum.Orientation.Left, Enum.Orientation.Right].includes(Plasmoid.configuration.orientation) ? main.height : main.width;
+            width = visualizerWidth;
         }
         if (Plasmoid.configuration.visualizerStyle === Enum.VisualizerStyles.Wave) {
             bars = Math.floor((width + barGap) / barGap);
@@ -49,7 +56,7 @@ PlasmoidItem {
         return bars;
     }
 
-    property int asciiMaxRange: [Enum.Orientation.Left, Enum.Orientation.Right].includes(Plasmoid.configuration.orientation) ? main.width : main.height
+    property int asciiMaxRange: Plasmoid.configuration.circleMode ? ([Enum.Orientation.Left, Enum.Orientation.Right].includes(Plasmoid.configuration.orientation) ? main.width : main.height) : Math.floor(visualizerHeight)
     property var logger: Logger.create(Plasmoid.configuration.debugMode ? LoggingCategory.Debug : LoggingCategory.Info)
     property bool hideWhenIdle: Plasmoid.configuration.hideWhenIdle
 
