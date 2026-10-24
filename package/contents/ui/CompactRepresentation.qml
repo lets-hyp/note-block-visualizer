@@ -61,6 +61,9 @@ Item {
             easing.type: Easing.InOutQuad
         }
     }
+    // a (fullscreen/maximized) window covers the widget, see the "pause on ... window" settings.
+    // Hiding the content stops the GIF, the scrolling text and the visualizer painting.
+    readonly property bool covered: main.pauseByWindow
     readonly property bool imageSideLayout: imageAllowed && imagePosition !== Enum.ImagePosition.Center
     property int bounceMode: Plasmoid.configuration.bounceMode
     property real bounceStrength: Plasmoid.configuration.bounceStrength / 100
@@ -157,7 +160,7 @@ Item {
         stereo: root.stereo
         reverse: Plasmoid.configuration.reverse
         sensitivity: Plasmoid.configuration.bounceSensitivity
-        active: root.imageAllowed && root.bounceMode !== Enum.BounceMode.Off && root.fadeLevel > 0
+        active: root.imageAllowed && root.bounceMode !== Enum.BounceMode.Off && root.fadeLevel > 0 && !root.covered
         onBeat: {
             coverLeft.pulse();
             coverRight.pulse();
@@ -185,7 +188,7 @@ Item {
     RowLayout {
         id: content
         opacity: root.fadeLevel
-        visible: root.fadeLevel > 0.01
+        visible: root.fadeLevel > 0.01 && !root.covered
         height: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.width : parent.height
         width: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.height : parent.width
         anchors.centerIn: parent
@@ -360,7 +363,7 @@ Item {
         bounceMode: root.bounceMode
         bounceStrength: root.bounceStrength
         level: beatDetector.level
-        visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Center && root.fadeLevel > 0.01
+        visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Center && root.fadeLevel > 0.01 && !root.covered
         opacity: root.imageOpacity / 100 * root.fadeLevel
         animated: !root.gifOnlyWhenPlaying || nowPlaying.playing
     }

@@ -119,6 +119,7 @@ PlasmoidItem {
         id: nowPlaying
         allowAll: Plasmoid.configuration.playersAllowAll
         allowed: Plasmoid.configuration.allowedPlayers
+        paused: main.pauseByWindow
     }
 
     Cava {

@@ -24,6 +24,8 @@ Item {
     property var allowed: []
     // identities of every player currently found (used by the settings page)
     property var playerList: []
+    // true while a window covers the widget: no polling needed
+    property bool paused: false
 
     property int _lastCount: -1
     property bool _warnedUndefined: false
@@ -117,7 +119,7 @@ Item {
 
     Timer {
         interval: 700
-        running: true
+        running: !root.paused
         repeat: true
         triggeredOnStart: true
         onTriggered: root.refresh()
