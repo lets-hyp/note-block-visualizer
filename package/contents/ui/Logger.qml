@@ -4,7 +4,7 @@ import QtQuick
 QtObject {
     id: root
     property int logLevel: LoggingCategory.Info
-    readonly property string name: "luisbocanegra.audio.visualizer"
+    readonly property string name: "com.github.lets-hyp.noteblock-visualizer"
     readonly property LoggingCategory loggingCategory: {
         let cat;
         switch (logLevel) {

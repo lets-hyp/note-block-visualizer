@@ -3,11 +3,11 @@
     "KPlugin": {
         "Authors": [
             {
-                "Email": "luisbocanegra17b@gmail.com",
-                "Name": "Luis Bocanegra"
+                "Email": "notyet",
+                "Name": "Hyp justHyp"
             }
         ],
-        "BugReportUrl": "https://github.com/luisbocanegra/plasma-audio-visualizer/issues",
+        "BugReportUrl": "https://github.com/lets-hyp/note-block-visualizer/issues",
         "Category": "System Information",
         "Description": "Audio visualizer powered by CAVA",
         "Description[fr]": "Visualiseur audio propulsé par CAVA",
@@ -17,11 +17,11 @@
         "Description[zh_CN]": "基于CAVA的音频可视化器",
         "EnabledByDefault": false,
         "Icon": "waveform-symbolic",
-        "Id": "luisbocanegra.audio.visualizer",
+        "Id": "com.github.lets-hyp.noteblock-visualizer",
         "License": "GPL-3.0",
-        "Name": "Plasma Audio Visualizer",
-        "Version": "3.6.1",
-        "Website": "https://github.com/luisbocanegra/plasma-audio-visualizer"
+        "Name": "Note Block Visualizer",
+        "Version": "0.1.0",
+        "Website": "https://github.com/lets-hyp/note-block-visualizer"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }
