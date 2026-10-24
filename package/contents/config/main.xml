@@ -262,5 +262,21 @@
     <entry name="allowedPlayers" type="StringList">
       <default></default>
     </entry>
+    <!-- with specific players selected: visualizer only reacts while one of them plays -->
+    <entry name="requirePlayerPlaying" type="Bool">
+      <default>true</default>
+    </entry>
+    <!-- fade the visualizer and image out when there is no sound -->
+    <entry name="fadeEnabled" type="Bool">
+      <default>true</default>
+    </entry>
+    <!-- seconds of silence before fading out -->
+    <entry name="fadeDelay" type="Int">
+      <default>5</default>
+    </entry>
+    <!-- ms, 0 = instant -->
+    <entry name="fadeDuration" type="Int">
+      <default>500</default>
+    </entry>
   </group>
 </kcfg>

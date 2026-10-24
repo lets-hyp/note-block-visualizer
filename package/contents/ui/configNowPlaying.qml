@@ -15,6 +15,7 @@ KCM.SimpleKCM {
     property bool cfg_trackTextShowArtist
     property bool cfg_trackTextOnlyWhenPlaying
     property bool cfg_playersAllowAll
+    property bool cfg_requirePlayerPlaying
     property var cfg_allowedPlayers: []
 
     property bool cfg_trackTextEnabledDefault
@@ -24,6 +25,7 @@ KCM.SimpleKCM {
     property bool cfg_trackTextShowArtistDefault
     property bool cfg_trackTextOnlyWhenPlayingDefault
     property bool cfg_playersAllowAllDefault
+    property bool cfg_requirePlayerPlayingDefault
     property var cfg_allowedPlayersDefault: []
 
     readonly property bool textOn: cfg_trackTextEnabled
@@ -165,11 +167,19 @@ KCM.SimpleKCM {
             }
         }
 
+        QQC2.CheckBox {
+            Kirigami.FormData.label: i18n("Visualizer:")
+            enabled: !root.cfg_playersAllowAll
+            text: i18n("React only while one of these players is playing")
+            checked: root.cfg_requirePlayerPlaying
+            onToggled: root.cfg_requirePlayerPlaying = checked
+        }
+
         QQC2.Label {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 22
             wrapMode: Text.WordWrap
             opacity: 0.7
-            text: i18n("The player filter applies to the track name, the album art and the GIF animation. The track name is only shown for the Top and Bottom visualizer orientations, not in circle mode.")
+            text: i18n("The player filter applies to the track name, the album art, the GIF animation and, when ticked above, the visualizer. CAVA listens to all system audio, so sound from other apps is still drawn while a selected player is playing. The track name is only shown for the Top and Bottom visualizer orientations, not in circle mode.")
         }
     }
 

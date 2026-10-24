@@ -40,7 +40,6 @@ Item {
         const n = players.count;
         if (n !== _lastCount) {
             _lastCount = n;
-            console.log("[NowPlaying] players found:", n);
         }
         if (n === 0) {
             if (playerList.length > 0) {
@@ -104,8 +103,6 @@ Item {
         artUrl = newArtUrl;
         playing = newPlaying;
     }
-
-    onTitleChanged: console.log("[NowPlaying] title:", title, "| artist:", artist, "| playing:", playing)
 
     Mpris.Mpris2Model {
         id: playersModel

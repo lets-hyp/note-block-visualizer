@@ -48,6 +48,19 @@ Item {
     property int imageSize: Plasmoid.configuration.imageSize
     property int imageOpacity: Plasmoid.configuration.imageOpacity
     property bool gifOnlyWhenPlaying: Plasmoid.configuration.gifOnlyWhenPlaying
+    property bool fadeEnabled: Plasmoid.configuration.fadeEnabled
+    property int fadeDelay: Plasmoid.configuration.fadeDelay
+    property int fadeDuration: Plasmoid.configuration.fadeDuration
+    // with specific players selected, the visualizer follows them
+    property bool followPlayers: Plasmoid.configuration.requirePlayerPlaying && !Plasmoid.configuration.playersAllowAll
+    // 1 = fully shown, 0 = faded out (animated)
+    property real fadeLevel: (activityGate.active || cava.hasError) ? 1.0 : 0.0
+    Behavior on fadeLevel {
+        NumberAnimation {
+            duration: root.fadeDuration
+            easing.type: Easing.InOutQuad
+        }
+    }
     readonly property bool imageSideLayout: imageAllowed && imagePosition !== Enum.ImagePosition.Center
     property int bounceMode: Plasmoid.configuration.bounceMode
     property real bounceStrength: Plasmoid.configuration.bounceStrength / 100
@@ -128,6 +141,15 @@ Item {
     }
     property bool drawInactiveBlocks: Plasmoid.configuration.drawInactiveBlocks
 
+    ActivityGate {
+        id: activityGate
+        values: cava.values
+        gateEnabled: root.fadeEnabled
+        requirePlayer: root.followPlayers
+        playerPlaying: nowPlaying.playing
+        delaySeconds: root.fadeDelay
+    }
+
     BeatDetector {
         id: beatDetector
         values: cava.values
@@ -135,7 +157,7 @@ Item {
         stereo: root.stereo
         reverse: Plasmoid.configuration.reverse
         sensitivity: Plasmoid.configuration.bounceSensitivity
-        active: root.imageAllowed && root.bounceMode !== Enum.BounceMode.Off
+        active: root.imageAllowed && root.bounceMode !== Enum.BounceMode.Off && root.fadeLevel > 0
         onBeat: {
             coverLeft.pulse();
             coverRight.pulse();
@@ -162,6 +184,8 @@ Item {
 
     RowLayout {
         id: content
+        opacity: root.fadeLevel
+        visible: root.fadeLevel > 0.01
         height: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.width : parent.height
         width: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.height : parent.width
         anchors.centerIn: parent
@@ -336,8 +360,8 @@ Item {
         bounceMode: root.bounceMode
         bounceStrength: root.bounceStrength
         level: beatDetector.level
-        visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Center
-        opacity: root.imageOpacity / 100
+        visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Center && root.fadeLevel > 0.01
+        opacity: root.imageOpacity / 100 * root.fadeLevel
         animated: !root.gifOnlyWhenPlaying || nowPlaying.playing
     }
 

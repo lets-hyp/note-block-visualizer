@@ -48,7 +48,9 @@ Item {
         asynchronous: true
         // keep the bundled pixel art crisp, smooth everything else
         smooth: !root.usingDefault
-        playing: root.visible && root.animated
+        // pause (not stop) so a GIF resumes from the frame it was paused on
+        playing: true
+        paused: !(root.visible && root.animated)
         scale: root.restScale * (root.bounceMode === 2 ? root.followFactor : root.pulseFactor)
         Behavior on scale {
             enabled: root.bounceMode === 2

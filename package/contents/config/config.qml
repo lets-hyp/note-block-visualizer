@@ -18,6 +18,11 @@ ConfigModel {
         source: "configNowPlaying.qml"
     }
     ConfigCategory {
+        name: i18n("Idle fade")
+        icon: "view-hidden"
+        source: "configFade.qml"
+    }
+    ConfigCategory {
         name: "CAVA"
         icon: "view-process-system-symbolic"
         source: "configCava.qml"
