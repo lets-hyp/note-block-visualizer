@@ -44,6 +44,32 @@ Item {
     property int imagePosition: Plasmoid.configuration.imagePosition
     property string imageSource: Plasmoid.configuration.imageSource
     property int imageSpacing: Plasmoid.configuration.imageSpacing
+    property bool useAlbumArt: Plasmoid.configuration.imageUseAlbumArt
+    property int imageSize: Plasmoid.configuration.imageSize
+    property int imageOpacity: Plasmoid.configuration.imageOpacity
+    property bool gifOnlyWhenPlaying: Plasmoid.configuration.gifOnlyWhenPlaying
+    readonly property bool imageSideLayout: imageAllowed && imagePosition !== Enum.ImagePosition.Center
+    property int bounceMode: Plasmoid.configuration.bounceMode
+    property real bounceStrength: Plasmoid.configuration.bounceStrength / 100
+    readonly property string coverSource: (useAlbumArt && nowPlaying.artUrl !== "") ? nowPlaying.artUrl : imageSource
+
+    property bool trackTextEnabled: Plasmoid.configuration.trackTextEnabled
+    property int trackTextPosition: Plasmoid.configuration.trackTextPosition
+    property int trackTextSize: Plasmoid.configuration.trackTextSize
+    property color trackTextColor: Plasmoid.configuration.trackTextColor
+    property bool trackTextShowArtist: Plasmoid.configuration.trackTextShowArtist
+    property bool trackTextOnlyWhenPlaying: Plasmoid.configuration.trackTextOnlyWhenPlaying
+    readonly property string trackTextValue: {
+        const title = nowPlaying.title;
+        if (title === "") {
+            return "";
+        }
+        return (trackTextShowArtist && nowPlaying.artist !== "") ? nowPlaying.artist + " - " + title : title;
+    }
+    readonly property bool trackTextActive: trackTextEnabled && !circleMode && [Enum.Orientation.Top, Enum.Orientation.Bottom].includes(orientation) && trackTextValue !== "" && (!trackTextOnlyWhenPlaying || nowPlaying.playing)
+    // Auto = opposite side of where the bars grow from
+    readonly property bool trackTextOnTop: trackTextPosition === Enum.TextPosition.Auto ? orientation === Enum.Orientation.Bottom : trackTextPosition === Enum.TextPosition.Top
+    readonly property bool trackTextAlignRight: imageAllowed && imagePosition === Enum.ImagePosition.Right
     // the image only makes sense for the normal bottom/top bar layouts
     readonly property bool imageAllowed: showImage && !circleMode && [Enum.Orientation.Top, Enum.Orientation.Bottom].includes(orientation)
     clip: !Plasmoid.configuration.debugMode
@@ -102,6 +128,21 @@ Item {
     }
     property bool drawInactiveBlocks: Plasmoid.configuration.drawInactiveBlocks
 
+    BeatDetector {
+        id: beatDetector
+        values: cava.values
+        maxRange: main.asciiMaxRange
+        stereo: root.stereo
+        reverse: Plasmoid.configuration.reverse
+        sensitivity: Plasmoid.configuration.bounceSensitivity
+        active: root.imageAllowed && root.bounceMode !== Enum.BounceMode.Off
+        onBeat: {
+            coverLeft.pulse();
+            coverRight.pulse();
+            coverCenter.pulse();
+        }
+    }
+
     // Report the real visualizer size back to main.qml so the bar count and
     // CAVA's ascii range follow the visualizer area, not the whole widget.
     Binding {
@@ -124,116 +165,153 @@ Item {
         height: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.width : parent.height
         width: [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) ? parent.height : parent.width
         anchors.centerIn: parent
-        spacing: root.imageAllowed ? root.imageSpacing : 0
+        spacing: root.imageSideLayout ? root.imageSpacing : 0
         CoverImage {
             id: coverLeft
-            source: root.imageSource
+            source: root.coverSource
+            bounceMode: root.bounceMode
+            bounceStrength: root.bounceStrength
+            level: beatDetector.level
             visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Left
-            Layout.preferredWidth: content.height
-            Layout.preferredHeight: content.height
+            Layout.preferredWidth: content.height * root.imageSize / 100
+            Layout.preferredHeight: content.height * root.imageSize / 100
+            opacity: root.imageOpacity / 100
+            animated: !root.gifOnlyWhenPlaying || nowPlaying.playing
             Layout.alignment: Qt.AlignVCenter
         }
-        Visualizer {
-            id: visualizer
-            visualizerStyle: root.visualizerStyle
-            circleMode: root.circleMode
-            circleModeSize: root.circleModeSize
-            circleModeFill: root.circleModeFill
-            barWidth: root.barWidth
-            blockHeight: root.blockHeight
-            blockSpacing: root.blockSpacing
-            barGap: root.barGap
-            centeredBars: root.centeredBars
-            waveMode: root.waveMode
-            roundedBars: root.roundedBars
-            fillWave: root.fillWave
-            barColorsCfg: root.barColorsCfg
-            waveFillColorsCfg: root.waveFillColorsCfg
-            inactiveBlockColorsCfg: root.inactiveBlockColorsCfg
-            drawInactiveBlocks: root.drawInactiveBlocks
-            waveSimulateWaveform: root.waveSimulateWaveform
-            waveform: root.waveform
-            values: {
-                let values = [...cava.values];
-                if (circleMode && root.stereo) {
-                    return Utils.swapChannels(values);
+        ColumnLayout {
+            id: barsColumn
+            spacing: 0
+                Layout.preferredWidth: {
+                    if (circleMode) {
+                        return main.minimumDimension;
+                    }
+                    return (main.horizontal && !Plasmoid.configuration.expanding) ? Plasmoid.configuration.length : -1;
                 }
-                if (root.visualizerStyle === Enum.VisualizerStyles.Wave && root.pinnedDownSides && !root.circleMode && !root.waveform) {
-                    values[0] = 0;
-                    values[values.length - 1] = 0;
+                Layout.preferredHeight: {
+                    if (circleMode) {
+                        return main.minimumDimension;
+                    }
+                    return !(main.horizontal && !Plasmoid.configuration.expanding) ? Plasmoid.configuration.length : -1;
                 }
-                return values;
-            }
-            debugMode: Plasmoid.configuration.debugMode
-            visible: !cava.hasError && !cava.idle
-            fixVertical: !main.horizontal
-            Layout.preferredWidth: {
-                if (circleMode) {
-                    return main.minimumDimension;
-                }
-                return (main.horizontal && !Plasmoid.configuration.expanding) ? Plasmoid.configuration.length : -1;
-            }
-            Layout.preferredHeight: {
-                if (circleMode) {
-                    return main.minimumDimension;
-                }
-                return !(main.horizontal && !Plasmoid.configuration.expanding) ? Plasmoid.configuration.length : -1;
-            }
-            Layout.fillHeight: main.horizontal || Plasmoid.configuration.expanding || [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) || main.onDesktop
-            Layout.fillWidth: !main.horizontal || Plasmoid.configuration.expanding || [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) || main.onDesktop
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+                Layout.fillHeight: main.horizontal || Plasmoid.configuration.expanding || [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) || main.onDesktop
+                Layout.fillWidth: !main.horizontal || Plasmoid.configuration.expanding || [Enum.Orientation.Left, Enum.Orientation.Right].includes(root.orientation) || main.onDesktop
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
 
-            property var orientationBottom: Rotation {
-                origin.x: Math.floor(visualizer.width / 2)
-                origin.y: Math.floor(visualizer.height / 2)
-                axis {
-                    x: 1
-                    y: 0
-                    z: 0
-                }
-                angle: 0
+            MarqueeText {
+                id: textTop
+                Layout.fillWidth: true
+                text: root.trackTextValue
+                color: root.trackTextColor
+                pixelSize: root.trackTextSize
+                alignRight: root.trackTextAlignRight
+                shown: root.trackTextActive && root.trackTextOnTop
             }
-            property var orientationTop: Rotation {
-                origin.x: Math.floor(visualizer.width / 2)
-                origin.y: Math.floor(visualizer.height / 2)
-                axis {
-                    x: 1
-                    y: 0
-                    z: 0
+
+            Visualizer {
+                id: visualizer
+                visualizerStyle: root.visualizerStyle
+                circleMode: root.circleMode
+                circleModeSize: root.circleModeSize
+                circleModeFill: root.circleModeFill
+                barWidth: root.barWidth
+                blockHeight: root.blockHeight
+                blockSpacing: root.blockSpacing
+                barGap: root.barGap
+                centeredBars: root.centeredBars
+                waveMode: root.waveMode
+                roundedBars: root.roundedBars
+                fillWave: root.fillWave
+                barColorsCfg: root.barColorsCfg
+                waveFillColorsCfg: root.waveFillColorsCfg
+                inactiveBlockColorsCfg: root.inactiveBlockColorsCfg
+                drawInactiveBlocks: root.drawInactiveBlocks
+                waveSimulateWaveform: root.waveSimulateWaveform
+                waveform: root.waveform
+                values: {
+                    let values = [...cava.values];
+                    if (circleMode && root.stereo) {
+                        return Utils.swapChannels(values);
+                    }
+                    if (root.visualizerStyle === Enum.VisualizerStyles.Wave && root.pinnedDownSides && !root.circleMode && !root.waveform) {
+                        values[0] = 0;
+                        values[values.length - 1] = 0;
+                    }
+                    return values;
                 }
-                angle: 180
+                debugMode: Plasmoid.configuration.debugMode
+                visible: !cava.hasError && !cava.idle
+                fixVertical: !main.horizontal
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                property var orientationBottom: Rotation {
+                    origin.x: Math.floor(visualizer.width / 2)
+                    origin.y: Math.floor(visualizer.height / 2)
+                    axis {
+                        x: 1
+                        y: 0
+                        z: 0
+                    }
+                    angle: 0
+                }
+                property var orientationTop: Rotation {
+                    origin.x: Math.floor(visualizer.width / 2)
+                    origin.y: Math.floor(visualizer.height / 2)
+                    axis {
+                        x: 1
+                        y: 0
+                        z: 0
+                    }
+                    angle: 180
+                }
+                property var orientationLeft: Rotation {
+                    origin.x: Math.floor(visualizer.width / 2)
+                    origin.y: Math.floor(visualizer.height / 2)
+                    angle: 90
+                }
+                property var orientationRight: Rotation {
+                    origin.x: Math.floor(visualizer.width / 2)
+                    origin.y: Math.floor(visualizer.height / 2)
+                    angle: -90
+                }
+                transform: {
+                    let t = [];
+                    if (main.orientation === Enum.Orientation.Top) {
+                        t.push(orientationTop);
+                    }
+                    if (main.orientation === Enum.Orientation.Left) {
+                        t.push(orientationLeft);
+                    }
+                    if (main.orientation === Enum.Orientation.Right) {
+                        t.push(orientationRight);
+                        t.push(orientationTop);
+                    }
+                    return t;
+                }
             }
-            property var orientationLeft: Rotation {
-                origin.x: Math.floor(visualizer.width / 2)
-                origin.y: Math.floor(visualizer.height / 2)
-                angle: 90
-            }
-            property var orientationRight: Rotation {
-                origin.x: Math.floor(visualizer.width / 2)
-                origin.y: Math.floor(visualizer.height / 2)
-                angle: -90
-            }
-            transform: {
-                let t = [];
-                if (main.orientation === Enum.Orientation.Top) {
-                    t.push(orientationTop);
-                }
-                if (main.orientation === Enum.Orientation.Left) {
-                    t.push(orientationLeft);
-                }
-                if (main.orientation === Enum.Orientation.Right) {
-                    t.push(orientationRight);
-                    t.push(orientationTop);
-                }
-                return t;
+
+            MarqueeText {
+                id: textBottom
+                Layout.fillWidth: true
+                text: root.trackTextValue
+                color: root.trackTextColor
+                pixelSize: root.trackTextSize
+                alignRight: root.trackTextAlignRight
+                shown: root.trackTextActive && !root.trackTextOnTop
             }
         }
         CoverImage {
             id: coverRight
-            source: root.imageSource
+            source: root.coverSource
+            bounceMode: root.bounceMode
+            bounceStrength: root.bounceStrength
+            level: beatDetector.level
             visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Right
-            Layout.preferredWidth: content.height
-            Layout.preferredHeight: content.height
+            Layout.preferredWidth: content.height * root.imageSize / 100
+            Layout.preferredHeight: content.height * root.imageSize / 100
+            opacity: root.imageOpacity / 100
+            animated: !root.gifOnlyWhenPlaying || nowPlaying.playing
             Layout.alignment: Qt.AlignVCenter
         }
         Kirigami.Icon {
@@ -246,6 +324,21 @@ Item {
             color: Kirigami.Theme.negativeTextColor
             visible: cava.hasError
         }
+    }
+
+    // Centered mode: the image floats over the middle of the visualizer
+    CoverImage {
+        id: coverCenter
+        anchors.centerIn: parent
+        width: Math.min(root.width, root.height) * root.imageSize / 100
+        height: width
+        source: root.coverSource
+        bounceMode: root.bounceMode
+        bounceStrength: root.bounceStrength
+        level: beatDetector.level
+        visible: root.imageAllowed && root.imagePosition === Enum.ImagePosition.Center
+        opacity: root.imageOpacity / 100
+        animated: !root.gifOnlyWhenPlaying || nowPlaying.playing
     }
 
     MouseArea {

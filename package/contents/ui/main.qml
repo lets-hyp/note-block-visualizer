@@ -115,6 +115,12 @@ PlasmoidItem {
         updateStatus();
     }
 
+    NowPlaying {
+        id: nowPlaying
+        allowAll: Plasmoid.configuration.playersAllowAll
+        allowed: Plasmoid.configuration.allowedPlayers
+    }
+
     Cava {
         id: cava
         framerate: Plasmoid.configuration.framerate

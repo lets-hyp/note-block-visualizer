@@ -29,4 +29,17 @@ const WaveMode = {
 const ImagePosition = {
   Left: 0,
   Right: 1,
+  Center: 2,
+};
+
+const TextPosition = {
+  Auto: 0,
+  Top: 1,
+  Bottom: 2,
+};
+
+const BounceMode = {
+  Off: 0,
+  Beat: 1,
+  Follow: 2,
 };

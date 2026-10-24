@@ -8,9 +8,14 @@ ConfigModel {
         source: "configVisualizer.qml"
     }
     ConfigCategory {
-        name: i18n("Cover image")
+        name: i18n("Image")
         icon: "image-x-generic-symbolic"
         source: "configCover.qml"
+    }
+    ConfigCategory {
+        name: i18n("Now playing")
+        icon: "media-playback-start-symbolic"
+        source: "configNowPlaying.qml"
     }
     ConfigCategory {
         name: "CAVA"
